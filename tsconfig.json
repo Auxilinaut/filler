@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es5",
+    "sourceMap": false
+  },
+  "include": [
+    "typings/index.d.ts",
+    "src/ts/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "bower_components",
+    "platforms",
+    "plugins",
+    "assets",
+    "hooks",
+    "www"
+  ]
+}

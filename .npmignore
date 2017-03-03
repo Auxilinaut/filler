@@ -1,0 +1,7 @@
+.tscache/
+node_modules/
+.idea/
+.baseDir.ts
+typings/
+src/ts/**/*.js
+src/ts/**/*.map

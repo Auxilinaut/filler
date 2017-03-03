@@ -85,6 +85,7 @@ export class Main {
     // Define all of the game states we plan to use
     this.game.state.add("Boot", States.Boot);
     this.game.state.add("Preload", States.Preload);
+    this.game.state.add("Level1", States.Level1);
 
     // Change to the Boot state to start the real work
     this.game.state.start("Boot");

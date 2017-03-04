@@ -62,7 +62,7 @@ export class Main {
     }
 
     // Create the game object
-    this.game = new Phaser.Game(this.config.get("viewport.width"), this.config.get("viewport.height"), Phaser.AUTO, "container", this);
+    this.game = new Phaser.Game(800, 1280, Phaser.AUTO, "container", this);
   }
 
   /**

@@ -62,7 +62,7 @@ export class Main {
     }
 
     // Create the game object
-    this.game = new Phaser.Game(800, 1280, Phaser.AUTO, "container", this);
+    this.game = new Phaser.Game(411, 731, Phaser.AUTO, "container", this);
   }
 
   /**

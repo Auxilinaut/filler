@@ -42,6 +42,10 @@ export default class Items extends Phaser.Group {
             //this.sprites[i].smoothed = false;
 
             this.num ++;
+        }else{
+            this.num=0;
+            this.sprites = [];
+            this.spawn();
         }
 
     }

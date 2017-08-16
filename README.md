@@ -1,6 +1,6 @@
-# Filler - A Phaser + TypeScript & Cordova filler game
+# Filler - A box filling game in TypeScript with Phaser & Cordova
 
-This game is under construction. So much and so quickly in fact that there may be bugs. Uses a [template by fractile81](https://github.com/fractile81/cordova-phaser-ts-jed). Below is helpful stuff that guy wrote.
+This game is under construction. Play the latest production build of this game [here](http://filler.tk). This project was initialized with a [Cordova boilerplate setup by fractile81](https://github.com/fractile81/cordova-phaser-ts-jed), whose description is as follows:
 
 Both [Jed](https://slexaxton.github.io/Jed/) and [po2json](https://github.com/mikeedwards/po2json) have been included to assist in any internationalization (i18n) efforts.
 
@@ -67,7 +67,7 @@ You can always use `grunt -h` to list all available tasks.  Below is a list of u
 - **lint** - Run all linters and code validation tasks.
 - **open** - Open [http://localhost:9000](http://localhost:9000) in your default browser.
 
-## License
+## License (fractile81/cordova-phaser-ts-jed)
 Copyright 2016 Craig A. Hancock
 
 Licensed under the Apache License, Version 2.0 (the "License");

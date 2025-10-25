@@ -95,11 +95,13 @@ export default class Level1 extends Phaser.Scene {
         this.facingRight = false
         this.guy.setVelocityX(-200)
         if (!this.jumping) this.guy.anims.play('guy-walk', true)
+        else this.guy.anims.play('guy-fall', true)
         this.guy.setFlipX(true).setScale(2)
       } else if (this.cursors.right?.isDown) {
         this.facingRight = true
         this.guy.setVelocityX(200)
         if (!this.jumping) this.guy.anims.play('guy-walk', true)
+        else this.guy.anims.play('guy-fall', true)
         this.guy.setFlipX(false).setScale(2)
       } else if (this.jumping) {
         this.guy.anims.play('guy-fall', true)

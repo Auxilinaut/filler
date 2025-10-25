@@ -8,6 +8,7 @@ export default class Items extends Phaser.Physics.Arcade.Group {
   constructor(scene: Phaser.Scene) {
     super(scene.physics.world, scene)
     scene.add.existing(this)
+    this.classType = Phaser.Physics.Arcade.Sprite
 
     // Collect frame names from the XML atlas
     const tx = scene.textures.get('items')

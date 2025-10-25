@@ -18,7 +18,11 @@ const config: Phaser.Types.Core.GameConfig = {
     arcade: { gravity: {
       x: 0,
       y: 0
-    }, debug: false }
+    }, debug: true,                 // <— outlines, centers, etc.
+      debugShowBody: true,         // bodies (dynamic)
+      debugShowStaticBody: true,   // bodies (static)
+      debugShowVelocity: true,
+    }
   },
   scene: [BootScene, PreloadScene, Level1]
 }

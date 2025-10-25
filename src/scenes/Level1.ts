@@ -59,21 +59,24 @@ export default class Level1 extends Phaser.Scene {
     this.explosions = this.add.group({ classType: Phaser.GameObjects.Sprite, runChildUpdate: false })
 
     this.physics.add.overlap(this.guy, this.box, this.moveBox as any, undefined, this)
-    this.physics.add.overlap(this.items, this.guy, this.fellDown as any, undefined, this)
-    this.physics.add.collider(this.items, this.box, this.fellDown as any, undefined, this)
-    this.physics.add.collider(this.box, this.items, this.fellDown as any, undefined, this);
+
+    // items vs BOX -> score only (no explosion)
+    this.physics.add.collider(this.items, this.box, this.onItemBox as Phaser.Types.Physics.Arcade.ArcadePhysicsCallback, undefined, this)
+
+    // items vs GUY -> explode + kill guy
+    this.physics.add.overlap(this.items, this.guy, this.onItemGuy as Phaser.Types.Physics.Arcade.ArcadePhysicsCallback, undefined, this)
 
     this.scoreText = this.add.text(20, 20, 'Score: 0', { fontFamily: 'monospace', fontSize: '16px', color: '#ffffff' }).setDepth(1000)
 
-    // Resume audio context on first user gesture
+    // resume audio context on first user gesture
     if (this.sound.locked) {
-      // On first user gesture, Phaser will unlock the audio context safely
+      // on first user gesture, Phaser will unlock the audio context safely
       this.input.once('pointerdown', () => this.sound.unlock());
     }
 
     // in Level1.create()
     this.scale.on('resize', (size) => {
-      // e.g., reposition score text
+      // e.g. reposition score text
       this.scoreText.setPosition(20, 20)
     })
   }
@@ -104,11 +107,18 @@ export default class Level1 extends Phaser.Scene {
         this.guy.anims.play('guy-idle', true)
       }
 
-      this.items.getChildren().forEach((child) => {
-        const s = child as Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
-        if (!s || !s.body) return
+      (this.items.getChildren() as Phaser.Physics.Arcade.Sprite[]).forEach((s) => {
         const body = s.body as Phaser.Physics.Arcade.Body
-        if (body.blocked.down) s.disableBody(true, true)
+        if (!body) return
+
+        // trigger floor landing once
+        if (body.blocked.down && !s.getData('landed')) {
+          s.setData('landed', true)
+          s.disableBody(true, true)
+          // don’t treat "on the box" as floor
+          if (this.isRestingOnBox(s)) return
+          this.spawnExplosion(s.x, s.y)
+        }
       })
 
       this.updateNextItemInterval()
@@ -125,60 +135,19 @@ export default class Level1 extends Phaser.Scene {
     guy.setVelocityX(this.facingRight ? -10 : 10)
   }
 
-  private fellDown = (
-    a: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody,
-    b: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
-  ) => {
-    // Normalize which is which
-    const hitBox = (a === this.box || b === this.box);
-    const hitGuy = (a === this.guy || b === this.guy);
-
-    // Figure out which one is the item sprite
-    const item = (a !== this.box && a !== this.guy) ? a : b;
-
-    // 1) ITEM ↔ BOX  => score++
-    if (hitBox) {
-      this.score++;
-      this.scoreText.setText('Score: ' + this.score);
-
-      // remove the item + little feedback
-      item.disableBody(true, true);
-      this.spawnExplosion(item.x, item.y);
-      this.box.setVelocityY(-80);
-      return;
-    }
-
-    // 2) ITEM ↔ GUY  => death sequence (once)
-    if (hitGuy && this.guyAlive) {
-      item.disableBody(true, true);
-
-      this.guyAlive = false;
-      this.guy.anims.stop();
-      this.guy.play('guy-dead');
-
-      const knockX = item.x < this.guy.x ? 120 : -120;
-      this.guy.setVelocity(knockX, -180);
-
-      this.cameras.main.flash(150, 255, 255, 255);
-      return;
-    }
-
-    // Otherwise ignore
-  };
-
-
-
   private spawnExplosion(x: number, y: number) {
-    let boom = this.explosions.getFirstDead(false) as Phaser.GameObjects.Sprite | null
+    let boom = this.explosions.getFirstDead(false) as Phaser.GameObjects.Sprite
     if (!boom) {
-      boom = this.add.sprite(x, y, 'explosion')
+      boom = this.add.sprite(x, y, 'explosion').setDepth(999)
       this.explosions.add(boom)
     } else {
-      boom.setPosition(x, y).setActive(true).setVisible(true)
+      boom.setPosition(x, y)
     }
+
+    boom.setActive(true).setVisible(true)
     boom.play('explosion')
     boom.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
-      boom?.setActive(false).setVisible(false)
+      boom.setActive(false).setVisible(false) // vanish after 1 run
     })
   }
 
@@ -189,4 +158,64 @@ export default class Level1 extends Phaser.Scene {
       this.items.spawn()
     }
   }
+
+  private onItemGuy = (itemObj: Phaser.GameObjects.GameObject) => {
+    if (!this.guyAlive) return
+
+    const item = itemObj as Phaser.Physics.Arcade.Sprite
+
+    // If someone else already handled this item, but not the guy, skip.
+    const handledBy = item.getData('handledBy')
+    if (handledBy && handledBy !== 'guy') return
+
+    // Guy has priority
+    item.setData('handledBy', 'guy')
+
+    this.spawnExplosion(item.x, item.y)
+
+    this.killGuy()
+  }
+
+  private onItemBox = (itemObj: Phaser.GameObjects.GameObject) => {
+    const item = itemObj as Phaser.Physics.Arcade.Sprite
+
+    // If the guy already handled it this frame, do nothing.
+    if (item.getData('handledBy') === 'guy') return
+
+    // Mark handled by box, score only
+    if (!item.getData('handledBy')) item.setData('handledBy', 'box')
+
+    this.score++
+    this.scoreText.setText('Score: ' + this.score)
+    this.box.setVelocityY(-80)
+  }
+
+  private isRestingOnBox(s: Phaser.Physics.Arcade.Sprite): boolean {
+    const ib = s.body as Phaser.Physics.Arcade.Body
+    const bb = this.box.body as Phaser.Physics.Arcade.Body
+    if (!ib || !bb) return false
+
+    // horizontally overlapping?
+    const horiz = ib.right > bb.left && ib.left < bb.right
+    // item bottom is essentially at the box top (edge-touching, not overlapping)
+    const touchingTop = Math.abs(ib.bottom - bb.top) <= 1
+
+    return horiz && touchingTop
+  }
+
+  private killGuy() {
+    if (!this.guyAlive) return
+    this.guyAlive = false
+
+    // death feedback
+    this.guy.play('guy-dead', true)
+    this.cameras.main.shake(200, 0.01)
+    this.guy.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+      this.time.delayedCall(1000, () => {
+        this.score = 0
+        this.scene.restart()
+      })
+    })
+  }
+
 }

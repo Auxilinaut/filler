@@ -10,15 +10,16 @@ const config: Phaser.Types.Core.GameConfig = {
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: 800,
-    height: 450
+    width: screen.availHeight * 9 / 16,
+    height: screen.availHeight,
   },
   physics: {
     default: 'arcade',
     arcade: { gravity: {
       x: 0,
       y: 0
-    }, debug: false
+    },
+    debug: true
     }
   },
   scene: [BootScene, PreloadScene, Level1]

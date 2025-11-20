@@ -19,6 +19,8 @@ export default class Level1 extends Phaser.Scene {
 
   private boxTop = false
   private facingRight = true
+  private runSpeed = 200
+  private boxSpeedMult = 5
 
   private lastItemInterval = 0
   private nextItemInterval = 0
@@ -93,13 +95,13 @@ export default class Level1 extends Phaser.Scene {
         this.guy.anims.play('guy-jump', true)
       } else if (this.cursors.left?.isDown) {
         this.facingRight = false
-        this.guy.setVelocityX(-200)
+        this.guy.setVelocityX(-this.runSpeed)
         if (!this.jumping) this.guy.anims.play('guy-walk', true)
         else this.guy.anims.play('guy-fall', true)
         this.guy.setFlipX(true).setScale(2)
       } else if (this.cursors.right?.isDown) {
         this.facingRight = true
-        this.guy.setVelocityX(200)
+        this.guy.setVelocityX(this.runSpeed)
         if (!this.jumping) this.guy.anims.play('guy-walk', true)
         else this.guy.anims.play('guy-fall', true)
         this.guy.setFlipX(false).setScale(2)
@@ -133,8 +135,13 @@ export default class Level1 extends Phaser.Scene {
     guy: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody,
     box: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
   ) => {
-    box.setVelocityX(guy.body.velocity.x)
-    guy.setVelocityX(this.facingRight ? -10 : 10)
+    let gb = guy.body
+    let bb = box.body
+    if (gb.bottom > bb.top && gb.right < bb.right && gb.left > bb.left) {
+      gb.position.y = bb.top - gb.height
+      this.boxTop = true
+    }
+    box.setVelocityX(this.facingRight ? this.boxSpeedMult * gb.velocity.x : -this.boxSpeedMult * gb.velocity.x)
   }
 
   private spawnExplosion(x: number, y: number) {
@@ -213,7 +220,7 @@ export default class Level1 extends Phaser.Scene {
     this.guy.play('guy-dead', true)
     this.cameras.main.shake(200, 0.01)
     this.guy.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
-      this.time.delayedCall(1000, () => {
+      this.time.delayedCall(3000, () => {
         this.score = 0
         this.scene.restart()
       })
